@@ -19,27 +19,27 @@ pip install curl_cffi
 
 ## 使用
 
-1. 编辑 `wayin_batch.py` 顶部配置区：
+1. 编辑 `wayin_register_bot.py` 顶部配置区：
 
 ```python
-NUM_INVITERS = 10           # 注册多少个母号
+NUM_INVITERS = 1            # 注册多少个母号
 INVITES_PER_INVITER = 10    # 每个母号邀请多少人
-REGISTER_DELAY = 2          # 注册间隔（秒）
+REGISTER_DELAY = 1          # 注册间隔（秒）
 ```
 
-2. 如需代理，取消注释 `PROXY_CONFIG`：
+2. 如需代理，编辑 `PROXY_CONFIG`：
 
 ```python
 PROXY_CONFIG = {
-    "http": "http://127.0.0.1:7890",
-    "https": "http://127.0.0.1:7890",
+    "http": "http://127.0.0.1:10808",
+    "https": "http://127.0.0.1:10808",
 }
 ```
 
 3. 运行：
 
 ```bash
-python3 wayin_batch.py
+python3 wayin_register_bot.py
 ```
 
 4. 结果保存在 `/tmp/wayin_batch_result.json`
