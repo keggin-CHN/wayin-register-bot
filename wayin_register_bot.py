@@ -21,15 +21,21 @@ import base64
 import random
 import string
 import sys
+import io
 from typing import Any, Dict, List, Optional, Tuple
 from curl_cffi import requests as curl_requests
+
+# Windows 终端 UTF-8 编码修复
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 # ╔══════════════════════════════════════════════════════════════╗
 # ║                        配 置 区                              ║
 # ╚══════════════════════════════════════════════════════════════╝
 
 # 注册多少个母号（邀请号）
-NUM_INVITERS = 10
+NUM_INVITERS = 1
 
 # 每个母号邀请多少人
 INVITES_PER_INVITER = 10
@@ -43,7 +49,7 @@ POLL_INTERVAL = 5
 # 注册间隔（秒），避免触发频率限制
 # ⚠️ 每个子号必须用独立 session！共享 session 会导致邀请追踪丢失。
 # 间隔不重要（0 秒也行），但建议留 1-2 秒避免极端情况。
-REGISTER_DELAY = 2
+REGISTER_DELAY = 1
 
 # 域名不支持时的最大重试次数
 DOMAIN_RETRY_MAX = 5
@@ -54,8 +60,8 @@ DOMAIN_RETRY_MAX = 5
 # ╚══════════════════════════════════════════════════════════════╝
 
 PROXY_CONFIG = {
-    # "http": "http://127.0.0.1:7890",
-    # "https": "http://127.0.0.1:7890",
+    "http": "http://127.0.0.1:10808",
+    "https": "http://127.0.0.1:10808",
     # "socks5": "socks5://127.0.0.1:1080",
 }
 
@@ -331,7 +337,6 @@ def process_one_inviter(index: int, wayin: WayinClient, mail: ChatGPTMailClient,
     # 1. 注册母号
     inviter = register_one_account(wayin, mail)
     print(f"  ✅ 母号注册成功: {inviter['email']} / {inviter['username']}")
-    print(f"  邀请码: {inviter['invitation_code']}")
 
     # 2. 用母号登录获取 token
     login_data = wayin.login(inviter["email"], inviter["password"])
@@ -339,6 +344,11 @@ def process_one_inviter(index: int, wayin: WayinClient, mail: ChatGPTMailClient,
     inviter["has_reward_trial"] = bool(login_data.get("reward_trial_plan"))
     inviter["reward_trial_plan"] = login_data.get("reward_trial_plan", "")
     inviter["credit_limit"] = login_data.get("credit_limit", "")
+
+    # 2.1 通过 /api/user 接口获取邀请码（注册接口不返回邀请码）
+    user_info = wayin.get_user_info(inviter_token)
+    inviter["invitation_code"] = user_info.get("invitation_code", "")
+    print(f"  邀请码: {inviter['invitation_code']}")
 
     # 3. 邀请子号（每个子号用独立 session！）
     invited = []
